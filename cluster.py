@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
 import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_score
 
 
 def import_data(pth : str):
@@ -21,6 +22,12 @@ def k_means(k, X):
     kmeans = KMeans(n_clusters = k, random_state = 21)
     kmeans.fit(X)
     return kmeans
+
+def get_emotions(data):
+    emotions = data.iloc[:, 56:57] 
+    emotions = pd.concat([emotions, data.iloc[:, 58:]], axis=1)
+    return emotions
+
 
 
 if __name__ == "__main__":
@@ -43,6 +50,9 @@ if __name__ == "__main__":
     pca = PCA(n_components = 2)
     pca_data = pca.fit_transform(scaled_X)
     pca_centers = pca.transform(kmeans.cluster_centers_)
+
+    score = silhouette_score(scaled_X, kmeans.labels_)  
+    print(f"Silhouette Score: {score}")
 
     plt.figure(figsize = (8,6))
     scatter = plt.scatter(pca_data[:, 0], pca_data[:, 1], c = data['Cluster'], cmap = 'viridis', alpha = 0.7)
