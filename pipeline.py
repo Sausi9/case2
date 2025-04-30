@@ -20,7 +20,7 @@ def split_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     columns.  Tweak the heuristic or pass explicit lists if you prefer.
     """
     # ↳ emotion terms in lower case for case-insensitive match
-    emot_words = {
+    emotion_words = {
         "frustrated", "upset", "hostile", "alert", "ashamed",
         "inspired", "nervous", "attentive", "afraid", "active", "determined",
     }
@@ -29,14 +29,14 @@ def split_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     emo_cols  = []
 
     for c in df.select_dtypes("number").columns:
-        (emo_cols if c.lower() in emot_words else num_cols).append(c)
+        (emo_cols if c.lower() in emotion_words else num_cols).append(c)
 
     return num_cols, emo_cols
 
 
 def build_pipeline(df: pd.DataFrame,
                    n_clusters: int = 4,
-                   pca_var: float = 0.90) -> Pipeline:
+                   pca_var: float = 0.5) -> Pipeline:
     """
     Assemble an impute → scale → (optional PCA) → cluster pipeline.
 
@@ -128,10 +128,11 @@ def compute_silhouette(pipeline, raw_df) -> float:
 if __name__ == "__main__":
     df = pd.read_csv("data/HR_data.csv") 
     df_orgnl = pd.read_csv("data/HR_data.csv")        # adjust path as needed
-       # adjust path as needed
-    pipe = build_pipeline(df, n_clusters=3)     # build
+    pipe = build_pipeline(df, n_clusters=3) 
+
     labels = pipe.fit_predict(df)               # fit + cluster
     df["cluster"] = labels
-    print(df[["cluster"]].value_counts().sort_index())
     sil = compute_silhouette(pipe, df_orgnl)
-    print(f"silhouette = {sil:.3f}")    
+
+    print(df[["cluster"]].value_counts().sort_index())
+    print(f"silhouette = {sil:.3f}")    # print silhouttescore
