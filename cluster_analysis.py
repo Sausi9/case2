@@ -100,7 +100,15 @@ def plot_emotion_radar(emotions_df, cluster_labels):
         ax.fill(angles, values, alpha=0.1)
 
     ax.set_thetagrids(np.degrees(angles[:-1]), categories)
-    ax.set_title('Emotion Profiles by Cluster')
+    ax.set_title('Emotion Profiles by Cluster', pad=30)
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
     plt.tight_layout()
     plt.show()
+
+def compute_physiological_stats(scaled_X, cluster_designation):
+    physio_df = scaled_X.iloc[:, [0, 12, 24, 36]].copy()
+    physio_df['Cluster'] = cluster_designation
+    cluster_means = physio_df.groupby('Cluster').mean()
+    print("Average physiological values per cluster:")
+    print(cluster_means)
+

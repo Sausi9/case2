@@ -26,20 +26,20 @@ def k_means(k, X):
     return kmeans
 
 def get_emotions(data):
-    emotions = data.iloc[:, 56:57] 
-    emotions = pd.concat([emotions, data.iloc[:, 58:]], axis=1)
+    emotions = data.iloc[:, 55:56] 
+    emotions = pd.concat([emotions, data.iloc[:, 57:]], axis=1)
     return emotions
 
 def get_puzzler(data):
-    puzzler = data.iloc[:, 55] 
+    puzzler = data.iloc[:, 54] 
     return puzzler
 
 def get_cohorts(data):
-    cohorts = data.iloc[:, 57]
+    cohorts = data.iloc[:, 56]
     return cohorts
 
 def get_phases(data):
-    phases = data.iloc[:, 53]
+    phases = data.iloc[:, 52]
     return phases
 
 def select_k(X, k_values, Nsim = 20):

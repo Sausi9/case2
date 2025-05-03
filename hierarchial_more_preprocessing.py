@@ -8,18 +8,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import gower
 
-from cluster import get_emotions, get_cohorts
-from cluster_analysis import compute_emotion_statistics, count_data_points_per_cluster, count_unique_per_cluster, compute_silhouette_score, plot_pca_with_clusters, plot_emotion_radar
+from cluster import get_emotions, get_cohorts, get_phases, get_puzzler
+from cluster_analysis import compute_emotion_statistics, count_data_points_per_cluster, count_unique_per_cluster, compute_silhouette_score, plot_pca_with_clusters, plot_emotion_radar, compute_physiological_stats
 from hierarchial_clustering import plot_dendogram
 
 if __name__ == '__main__':
     # --- Load your data ---
-    data = pd.read_csv('./data/HR_data.csv')
-    data_nonscaled =pd.read_csv('./data/HR_data.csv')
+    data = pd.read_csv('./data/HR_data.csv').iloc[:, 1:]
+    data_nonscaled =pd.read_csv('./data/HR_data.csv').iloc[:, 1:]
     # --- Define feature groups (fixed indexing) ---
-    continuous_cols = data.columns[:52].tolist()
-    string_cat_cols = [data.columns[52], data.columns[53], data.columns[57]]
-    numeric_cat_cols = [col for col in data.columns[52:68] if col not in string_cat_cols]
+    continuous_cols = data.columns[:51].tolist()
+    string_cat_cols = [data.columns[51], data.columns[52], data.columns[56]]
+    numeric_cat_cols = [col for col in data.columns[51:67] if col not in string_cat_cols]
     categorical_cols = string_cat_cols + numeric_cat_cols
     emotion_cols = ['Frustrated', 'upset', 'hostile', 'alert', 'ashamed',
                     'inspired', 'nervous', 'attentive', 'afraid', 'active', 'determined']
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # --- Normalize continuous and numeric categorical features ---
     scaler = MinMaxScaler()
     data[continuous_cols] = scaler.fit_transform(data[continuous_cols])
-
+    
     # --- Normalize emotion ratings using known fixed scale ---
     scaler_5pt = MinMaxScaler(feature_range=(0, 1))
     scaler_5pt.fit([[1], [5]])
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     # --- PCA on continuous data ---
     continuous_data = data[continuous_cols].to_numpy()
-    num_pca_components = 15
+    num_pca_components = 7
     pca = PCA(n_components=num_pca_components)
     pca_result = pca.fit_transform(continuous_data)
     print(f"Total variance explained: {sum(pca.explained_variance_ratio_[:num_pca_components]):.2%}")
@@ -103,6 +103,12 @@ if __name__ == '__main__':
     cohorts_pd = get_cohorts(data)
     count_unique_per_cluster(cluster_labels, cohorts_pd, 'cohorts')
 
+    phases_pd = get_phases(data)
+    count_unique_per_cluster(cluster_labels, phases_pd, 'phase')
+
+    puzzler_pd = get_puzzler(data)
+    count_unique_per_cluster(cluster_labels, puzzler_pd, 'puzzler')
+    compute_physiological_stats(data, cluster_labels)
     # Boxplot for 'upset' by cluster
     plt.figure(figsize=(12, 6))
     sns.boxplot(x=cluster_labels, y=emotions_pd_imputed['upset'])
@@ -115,5 +121,4 @@ if __name__ == '__main__':
     # Optional: Silhouette score & PCA visualization
     compute_silhouette_score(distance_matrix, cluster_labels)
     plot_pca_with_clusters(distance_matrix, cluster_labels)
-    print(emotions_pd_imputed)
     plot_emotion_radar(emotions_pd_imputed, cluster_labels)
