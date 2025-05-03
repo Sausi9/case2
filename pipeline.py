@@ -24,7 +24,7 @@ def split_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
         "frustrated", "upset", "hostile", "alert", "ashamed",
         "inspired", "nervous", "attentive", "afraid", "active", "determined",
     }
-
+    
     num_cols  = []
     emo_cols  = []
 

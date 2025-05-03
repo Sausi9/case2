@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     print(continuous_data)
 
-    kmeans = k_means(3, scaled_X)
+    kmeans = k_means(10, scaled_X)
 
     data['Cluster'] = kmeans.labels_
 
