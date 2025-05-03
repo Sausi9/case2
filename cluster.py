@@ -112,14 +112,14 @@ if __name__ == "__main__":
     imputer = SimpleImputer(strategy = 'mean')
     continuous_data_imputed = imputer.fit_transform(continuous_data)
 
-    scaler = StandardScaler()
-    scaled_X = scaler.fit_transform(continuous_data_imputed)
+    #scaler = StandardScaler()
+    #scaled_X = scaler.fit_transform(continuous_data_imputed)
 
-    print(continuous_data)
+    scaled_X = (continuous_data_imputed - continuous_data_imputed.mean())/continuous_data_imputed.std()
 
     k_range =  range(1, 11)
 
-    kmeans = k_means(2, scaled_X)
+    kmeans = k_means(3, scaled_X)
     k_opt = select_k(scaled_X, k_range)
 
     emotions_pd = get_emotions(data)

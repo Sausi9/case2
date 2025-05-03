@@ -1,11 +1,14 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
 import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_score
 from kmodes.kprototypes import KPrototypes
+from cluster import get_emotions, get_cohorts, get_phases
+from cluster_analysis import compute_emotion_statistics, count_data_points_per_cluster, count_unique_per_cluster, compute_silhouette_score, plot_pca_with_clusters, plot_emotion_radar
+import seaborn as sns
 
 if __name__ == '__main__':
     df = pd.read_csv('data/HR_data.csv')
@@ -37,6 +40,36 @@ if __name__ == '__main__':
     plt.legend(handles=scatter.legend_elements()[0] + [plt.scatter([], [], c='red', marker='x', s=200)])
 
     plt.show()
+
+    # --- Emotion statistics ---
+    emotions_pd = get_emotions(df)
+    imputer = SimpleImputer(strategy='mean')
+    emotions_pd_imputed = pd.DataFrame(imputer.fit_transform(emotions_pd), columns=emotions_pd.columns)
+
+    # Compute statistics and plots
+    compute_emotion_statistics(kproto.labels_, emotions_pd_imputed)
+    count_data_points_per_cluster(kproto.labels_)
+    cohorts_pd = get_cohorts(df)
+    count_unique_per_cluster(kproto.labels_, cohorts_pd, 'cohorts')
+
+
+    phases_pd = get_phases(df)
+    count_unique_per_cluster(kproto.labels_, phases_pd, 'phase')
+
+    # Boxplot for 'upset' by cluster
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(x=kproto.labels_, y=emotions_pd_imputed['upset'])
+    plt.title('Upset Ratings by Cluster')
+    plt.xlabel('Cluster')
+    plt.ylabel('Upset Rating')
+    plt.tight_layout()
+    plt.show()
+
+    # Optional: Silhouette score & PCA visualization
+    compute_silhouette_score(df_cont_imputed_scaled, kproto.labels_)
+    plot_pca_with_clusters(df_cont_imputed_scaled, kproto.labels_)
+
+    plot_emotion_radar(emotions_pd_imputed, kproto.labels_)
 
     print(f"Variance explained by PC1: {pca.explained_variance_ratio_[0]:.2%}")
     print(f"Variance explained by PC2: {pca.explained_variance_ratio_[1]:.2%}")

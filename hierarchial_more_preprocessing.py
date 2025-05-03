@@ -9,13 +9,13 @@ import seaborn as sns
 import gower
 
 from cluster import get_emotions, get_cohorts
-from cluster_analysis import compute_emotion_statistics, count_data_points_per_cluster, count_unique_per_cluster, compute_silhouette_score, plot_pca_with_clusters
+from cluster_analysis import compute_emotion_statistics, count_data_points_per_cluster, count_unique_per_cluster, compute_silhouette_score, plot_pca_with_clusters, plot_emotion_radar
 from hierarchial_clustering import plot_dendogram
 
 if __name__ == '__main__':
     # --- Load your data ---
     data = pd.read_csv('./data/HR_data.csv')
-
+    data_nonscaled =pd.read_csv('./data/HR_data.csv')
     # --- Define feature groups (fixed indexing) ---
     continuous_cols = data.columns[:52].tolist()
     string_cat_cols = [data.columns[52], data.columns[53], data.columns[57]]
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     data['Cluster'] = cluster_labels
 
     # --- Emotion statistics ---
-    emotions_pd = get_emotions(data)
+    emotions_pd = get_emotions(data_nonscaled)
     imputer = SimpleImputer(strategy='mean')
     emotions_pd_imputed = pd.DataFrame(imputer.fit_transform(emotions_pd), columns=emotions_pd.columns)
 
@@ -115,3 +115,5 @@ if __name__ == '__main__':
     # Optional: Silhouette score & PCA visualization
     compute_silhouette_score(distance_matrix, cluster_labels)
     plot_pca_with_clusters(distance_matrix, cluster_labels)
+    print(emotions_pd_imputed)
+    plot_emotion_radar(emotions_pd_imputed, cluster_labels)
