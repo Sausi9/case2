@@ -26,20 +26,20 @@ def k_means(k, X):
     return kmeans
 
 def get_emotions(data):
-    emotions = data.iloc[:, 56:57] 
-    emotions = pd.concat([emotions, data.iloc[:, 58:]], axis=1)
+    emotions = data.iloc[:, 55:56] 
+    emotions = pd.concat([emotions, data.iloc[:, 57:]], axis=1)
     return emotions
 
 def get_puzzler(data):
-    puzzler = data.iloc[:, 55] 
+    puzzler = data.iloc[:, 54] 
     return puzzler
 
 def get_cohorts(data):
-    cohorts = data.iloc[:, 57]
+    cohorts = data.iloc[:, 56]
     return cohorts
 
 def get_phases(data):
-    phases = data.iloc[:, 53]
+    phases = data.iloc[:, 52]
     return phases
 
 def select_k(X, k_values, Nsim = 20):
@@ -106,8 +106,8 @@ def select_k(X, k_values, Nsim = 20):
 
 if __name__ == "__main__":
     data = pd.read_csv('./data/HR_data.csv')
-    # X = import_data('./data/HR_data.csv')
-    
+    data2 = pd.read_csv('./data/HR_data.csv').iloc[:, 1:]
+
     continuous_data = extract_continuous(data)
     imputer = SimpleImputer(strategy = 'mean')
     continuous_data_imputed = imputer.fit_transform(continuous_data)
@@ -119,10 +119,11 @@ if __name__ == "__main__":
 
     k_range =  range(1, 11)
 
-    kmeans = k_means(3, scaled_X)
     k_opt = select_k(scaled_X, k_range)
+    kmeans = k_means(k_opt, scaled_X)
 
-    emotions_pd = get_emotions(data)
+    emotions_pd = get_emotions(data2)
+    print(emotions_pd)
     imputer = SimpleImputer(strategy='mean')
     emotions_pd_imputed = pd.DataFrame(imputer.fit_transform(emotions_pd), columns=emotions_pd.columns)
     emotion_scales = {'Frustrated': 10, 'upset': 5, 'hostile': 5, 'alert': 5, 'ashamed': 5, 'inspired': 5, 'nervous': 5, 'attentive': 5, 'afraid': 5, 'active': 5, 'determined': 5}

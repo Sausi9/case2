@@ -1,76 +1,59 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.decomposition import PCA
-from sklearn.impute import SimpleImputer
 import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_score
 from kmodes.kprototypes import KPrototypes
 from sklearn.feature_selection import mutual_info_classif
-from cluster import get_emotions, get_cohorts, get_phases
-from cluster_analysis import compute_emotion_statistics, count_data_points_per_cluster, count_unique_per_cluster, compute_silhouette_score, plot_pca_with_clusters, plot_emotion_radar
+from sklearn.impute import SimpleImputer
 import seaborn as sns
 
-def impute_and_scale(df):
-    imputer_cont = SimpleImputer(strategy = 'mean')
-    imputer_cat = SimpleImputer(strategy='most_frequent')
-    df_cont = df[df.columns[1:52]]
-    df_cat = df[df.columns[52:]].apply(lambda col: col.astype('category').cat.codes)
-    df_cont_imputed = imputer_cont.fit_transform(df_cont)
-    df_cat_imputed = imputer_cat.fit_transform(df_cat)
-    X_cont_imputed_scaled = (df_cont_imputed-df_cont_imputed.mean())/df_cont_imputed.std()
-    X_imputed = np.concatenate([X_cont_imputed_scaled,df_cat_imputed],axis=1)
-    df_imputed = pd.DataFrame(X_imputed, columns=df.columns[1:])
-    return df_imputed, X_cont_imputed_scaled
+from cluster import get_emotions, get_cohorts, get_phases
+from cluster_analysis import compute_emotion_statistics, count_data_points_per_cluster, count_unique_per_cluster, compute_silhouette_score, plot_pca_with_clusters, plot_emotion_radar
+from preprocessing import load_and_preprocess_data
 
-def find_clusters(n_clusters,X):
+def find_clusters(n_clusters, X):
     kproto = KPrototypes(n_clusters=n_clusters,
                          init='Huang',
                          verbose=0,
-                         random_state=21,
-                         )
-    clusters = kproto.fit_predict(X=X,
-                                  categorical=list(range(51,67)))
+                         random_state=21)
+    clusters = kproto.fit_predict(X=X, categorical=list(range(X.shape[1] - 16, X.shape[1])))
     return clusters, kproto
 
 def compute_feature_info(df_imputed, labels):
     X = df_imputed.values 
-    discrete = [False]*51 + [True]*16
+    discrete = [False]* (df_imputed.shape[1] - 16) + [True]*16
     mi_scores = mutual_info_classif(X, labels, discrete_features=discrete, random_state=0)
     mi_df = pd.DataFrame({
         'feature': df_imputed.columns,
         'mi_score': mi_scores,
-        'is_categorical' : discrete
+        'is_categorical': discrete
     }).sort_values('mi_score', ascending=False)
     return mi_df
 
 if __name__ == '__main__':
-    df = pd.read_csv('data/HR_data.csv')
-    df_imputed, df_cont_imputed_scaled = impute_and_scale(df)
-    clusters, kproto = find_clusters(n_clusters=2, X = df_imputed)
-    score = silhouette_score(df_cont_imputed_scaled, kproto.labels_)
-    print(f'Silhouette score is : {score}')
-    pca = PCA(n_components = 2)
-    pca_data = pca.fit_transform(df_cont_imputed_scaled)
-    fig,axs = plt.subplots(1, figsize=(8,6))
-    axs.scatter(pca_data[:, 0], pca_data[:, 1], c = kproto.labels_ , cmap = 'viridis', alpha = 0.7)
-    plt.show()
+    # Load and preprocess the data using the pipeline
+    raw_data, combined_df, nominal_cat_cols, ordinal_cat_cols, binary_cat_cols, emotion_cols, cat_feature_flags = load_and_preprocess_data('data/HR_data.csv', use_pca=False)
+    # Run K-Prototypes clustering
+    clusters, kproto = find_clusters(n_clusters=2, X=combined_df.to_numpy())
+    # Compute silhouette score on the continuous features only (first 51 columns)
+    cont_scaled = combined_df.iloc[:, :51].to_numpy()
 
-    mi_df = compute_feature_info(df_imputed,kproto.labels_)
+    # Mutual information feature importance
+    mi_df = compute_feature_info(combined_df, kproto.labels_)
     print(mi_df)
-    # --- Emotion statistics ---
-    emotions_pd = get_emotions(df)
+
+    # Emotion statistics and plots
+    emotions_pd = get_emotions(raw_data)
     imputer = SimpleImputer(strategy='mean')
     emotions_pd_imputed = pd.DataFrame(imputer.fit_transform(emotions_pd), columns=emotions_pd.columns)
 
-    # Compute statistics and plots
     compute_emotion_statistics(kproto.labels_, emotions_pd_imputed)
     count_data_points_per_cluster(kproto.labels_)
-    cohorts_pd = get_cohorts(df)
+    cohorts_pd = get_cohorts(raw_data)
     count_unique_per_cluster(kproto.labels_, cohorts_pd, 'cohorts')
 
-
-    phases_pd = get_phases(df)
+    phases_pd = get_phases(raw_data)
     count_unique_per_cluster(kproto.labels_, phases_pd, 'phase')
 
     # Boxplot for 'upset' by cluster
@@ -83,11 +66,7 @@ if __name__ == '__main__':
     plt.show()
 
     # Optional: Silhouette score & PCA visualization
-    compute_silhouette_score(df_cont_imputed_scaled, kproto.labels_)
-    plot_pca_with_clusters(df_cont_imputed_scaled, kproto.labels_)
-
+    compute_silhouette_score(cont_scaled, kproto.labels_)
+    plot_pca_with_clusters(cont_scaled, kproto.labels_)
     plot_emotion_radar(emotions_pd_imputed, kproto.labels_)
 
-    print(f"Variance explained by PC1: {pca.explained_variance_ratio_[0]:.2%}")
-    print(f"Variance explained by PC2: {pca.explained_variance_ratio_[1]:.2%}")
-    print(f"Total variance explained: {sum(pca.explained_variance_ratio_[:2]):.2%}")

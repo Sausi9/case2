@@ -74,11 +74,6 @@ def plot_pca_with_clusters(scaled_X, cluster_designation):
     plt.colorbar(scatter, label='Cluster')
     plt.legend()
     plt.show()
-    
-    print(f"Variance explained by PC1: {pca.explained_variance_ratio_[0]:.2%}")
-    print(f"Variance explained by PC2: {pca.explained_variance_ratio_[1]:.2%}")
-    print(f"Total variance explained: {sum(pca.explained_variance_ratio_[:2]):.2%}")
-
 
 def plot_emotion_radar(emotions_df, cluster_labels):
     emotions_df = emotions_df.copy()
@@ -100,7 +95,15 @@ def plot_emotion_radar(emotions_df, cluster_labels):
         ax.fill(angles, values, alpha=0.1)
 
     ax.set_thetagrids(np.degrees(angles[:-1]), categories)
-    ax.set_title('Emotion Profiles by Cluster')
+    ax.set_title('Emotion Profiles by Cluster', pad=30)
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
     plt.tight_layout()
     plt.show()
+
+def compute_physiological_stats(scaled_X, cluster_designation):
+    physio_df = scaled_X.iloc[:, [0, 12, 24, 36]].copy()
+    physio_df['Cluster'] = cluster_designation
+    cluster_means = physio_df.groupby('Cluster').mean()
+    print("Average physiological values per cluster:")
+    print(cluster_means)
+
