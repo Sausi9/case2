@@ -74,11 +74,6 @@ def plot_pca_with_clusters(scaled_X, cluster_designation):
     plt.colorbar(scatter, label='Cluster')
     plt.legend()
     plt.show()
-    
-    print(f"Variance explained by PC1: {pca.explained_variance_ratio_[0]:.2%}")
-    print(f"Variance explained by PC2: {pca.explained_variance_ratio_[1]:.2%}")
-    print(f"Total variance explained: {sum(pca.explained_variance_ratio_[:2]):.2%}")
-
 
 def plot_emotion_radar(emotions_df, cluster_labels):
     emotions_df = emotions_df.copy()

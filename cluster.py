@@ -106,8 +106,8 @@ def select_k(X, k_values, Nsim = 20):
 
 if __name__ == "__main__":
     data = pd.read_csv('./data/HR_data.csv')
-    # X = import_data('./data/HR_data.csv')
-    
+    data2 = pd.read_csv('./data/HR_data.csv').iloc[:, 1:]
+
     continuous_data = extract_continuous(data)
     imputer = SimpleImputer(strategy = 'mean')
     continuous_data_imputed = imputer.fit_transform(continuous_data)
@@ -119,10 +119,11 @@ if __name__ == "__main__":
 
     k_range =  range(1, 11)
 
-    kmeans = k_means(3, scaled_X)
     k_opt = select_k(scaled_X, k_range)
+    kmeans = k_means(k_opt, scaled_X)
 
-    emotions_pd = get_emotions(data)
+    emotions_pd = get_emotions(data2)
+    print(emotions_pd)
     imputer = SimpleImputer(strategy='mean')
     emotions_pd_imputed = pd.DataFrame(imputer.fit_transform(emotions_pd), columns=emotions_pd.columns)
     emotion_scales = {'Frustrated': 10, 'upset': 5, 'hostile': 5, 'alert': 5, 'ashamed': 5, 'inspired': 5, 'nervous': 5, 'attentive': 5, 'afraid': 5, 'active': 5, 'determined': 5}
